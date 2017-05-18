@@ -25,11 +25,12 @@ set(PROJECT_VERSION_MINOR 3)
 set(PROJECT_VERSION_PATCH 0)
 option(test "Build all tests." ON)
 
+
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
 # https://cmake.org/cmake/help/v3.0/policy/CMP0048.html#policy:CMP0048
 IF(POLICY CMP0048)
-  CMAKE_POLICY(SET CMP0048 OLD)
+    CMAKE_POLICY(SET CMP0048 OLD)
 ENDIF(POLICY CMP0048)
 
 include(CheckCXXCompilerFlag)
@@ -40,7 +41,7 @@ if(COMPILER_SUPPORTS_CXX11)
 elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 else()
-        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
 set(CMAKE_CXX_STANDARD 11)
@@ -54,15 +55,15 @@ find_package(Threads REQUIRED)
 
 # Set the right openssl root path
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
+    set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
 else()
-set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
+    set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
 endif()
 
 # Include OpenSSL
 find_package (OpenSSL REQUIRED)
 if (OPENSSL_FOUND)
-	include_directories(${OPENSSL_INCLUDE_DIR})
+    include_directories(${OPENSSL_INCLUDE_DIR})
 else ()
     message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
 endif (OPENSSL_FOUND)
@@ -74,7 +75,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package (Leveldb REQUIRED)
 find_package(CURL REQUIRED)
 if (LEVELDB_FOUND)
-        include_directories(${LEVELDB_INCLUDE_DIRS})
+    include_directories(${LEVELDB_INCLUDE_DIRS})
 else ()
     message( FATAL_ERROR "LevelDB was not found. Please install LevelDB" )
 endif (LEVELDB_FOUND)
@@ -104,6 +105,7 @@ set(JSONCPP_LIB "${JSONCPP_LIB_DIR}/lib/${prefix}jsoncpp${suffix}")
 set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(thirdparty/civetweb-1.9.1)
+include_directories(thirdparty/concurrentqueue)
 add_subdirectory(libminifi)
 add_subdirectory(main)
 
@@ -135,179 +137,16 @@ set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}")
 set(CPACK_BINARY_TGZ, "ON")
-
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_COMPONENTS_ALL bin)
 
+### include modules
+
 include(CPack)
 
-enable_testing(test)
-    SET(TEST_DIRECTORY ${CMAKE_SOURCE_DIR}/libminifi/test)
-    SET(TEST_RESOURCES ${TEST_DIRECTORY}/resources)
+include(BuildTests)
 
-    file(GLOB LIBMINIFI_TEST_SOURCES "libminifi/test/unit/*.cpp")
-    add_executable(tests ${LIBMINIFI_TEST_SOURCES} ${SPD_SOURCES})
-    target_include_directories(tests PRIVATE BEFORE "thirdparty/catch")
-    target_include_directories(tests PRIVATE BEFORE "thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")
-    target_include_directories(tests PRIVATE BEFORE "thirdparty/jsoncpp/include")
-    target_include_directories(tests PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
-    target_include_directories(tests PRIVATE BEFORE "include")
-    target_include_directories(tests PRIVATE BEFORE "libminifi/include/")
-    target_include_directories(tests PRIVATE BEFORE "libminifi/include/core")
-    target_include_directories(tests PRIVATE BEFORE "libminifi/include/core/repository")
-    target_include_directories(tests PRIVATE BEFORE "libminifi/include/core/yaml")
-    target_include_directories(tests PRIVATE BEFORE "libminifi/include/io")
-    target_include_directories(tests PRIVATE BEFORE "libminifi/include/utils")
-    target_include_directories(tests PRIVATE BEFORE "libminifi/include/processors")
-    target_include_directories(tests PRIVATE BEFORE "libminifi/include/provenance")
-    target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
-    if (CURL_FOUND)
-        target_include_directories(tests PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
-                target_link_libraries(tests ${CURL_LIBRARIES})
-        endif(CURL_FOUND)
-    add_test(NAME LibMinifiTests COMMAND tests WORKING_DIRECTORY ${TEST_DIRECTORY})
-    
-     
-    file(GLOB LIBMINIFI_TEST_CS "libminifi/test/HttpGetIntegrationTest.cpp")
-    add_executable(testHttpGet ${LIBMINIFI_TEST_CS} ${SPD_SOURCES})
-    target_include_directories(testHttpGet PRIVATE BEFORE "thirdparty/catch")
-    target_include_directories(testHttpGet PRIVATE BEFORE "thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")
-    target_include_directories(testHttpGet PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
-    target_include_directories(testHttpGet PRIVATE BEFORE "include")
-    target_include_directories(testHttpGet PRIVATE BEFORE "libminifi/include/")
-    target_include_directories(testHttpGet PRIVATE BEFORE "libminifi/include/core")
-    target_include_directories(testHttpGet PRIVATE BEFORE "libminifi/include/core/controller")
-    target_include_directories(testHttpGet PRIVATE BEFORE "libminifi/include/core/repository")
-    target_include_directories(testHttpGet PRIVATE BEFORE "libminifi/include/io")
-    target_include_directories(testHttpGet PRIVATE BEFORE "libminifi/include/utils")
-    target_include_directories(testHttpGet PRIVATE BEFORE "libminifi/include/processors")
-    target_include_directories(testHttpGet PRIVATE BEFORE "libminifi/include/provenance")
-    target_link_libraries(testHttpGet ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
-    if (CURL_FOUND)
-        target_include_directories(testHttpGet PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
-                target_link_libraries(testHttpGet ${CURL_LIBRARIES})
-        endif(CURL_FOUND)
-    add_test(NAME testHttpGet COMMAND testHttpGet "${TEST_RESOURCES}/TestHTTPGet.yml" WORKING_DIRECTORY ${TEST_DIRECTORY})
-    
-    file(GLOB LIBMINIFI_TEST_CS "libminifi/test/HttpPostIntegrationTest.cpp")
-    add_executable(testHttpPost ${LIBMINIFI_TEST_CS} ${SPD_SOURCES})
-    target_include_directories(testHttpPost PRIVATE BEFORE "thirdparty/catch")
-    target_include_directories(testHttpPost PRIVATE BEFORE "thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")
-    target_include_directories(testHttpPost PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
-    target_include_directories(testHttpPost PRIVATE BEFORE "include")
-    target_include_directories(testHttpPost PRIVATE BEFORE "libminifi/include/")
-    target_include_directories(testHttpPost PRIVATE BEFORE "libminifi/include/core")
-    target_include_directories(testHttpPost PRIVATE BEFORE "libminifi/include/core/controller")
-    target_include_directories(testHttpPost PRIVATE BEFORE "libminifi/include/core/repository")
-    target_include_directories(testHttpPost PRIVATE BEFORE "libminifi/include/io")
-    target_include_directories(testHttpPost PRIVATE BEFORE "libminifi/include/utils")
-    target_include_directories(testHttpPost PRIVATE BEFORE "libminifi/include/processors")
-    target_include_directories(testHttpPost PRIVATE BEFORE "libminifi/include/provenance")
-    target_link_libraries(testHttpPost ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
-    if (CURL_FOUND)
-        target_include_directories(testHttpPost PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
-    	target_link_libraries(testHttpPost ${CURL_LIBRARIES})
-    endif(CURL_FOUND)
-    add_test(NAME testHttpPost COMMAND testHttpPost "${TEST_RESOURCES}/TestHTTPPost.yml" WORKING_DIRECTORY ${TEST_DIRECTORY})
-    
-    
-    file(GLOB LIBMINIFI_TEST_EXECUTE_PROCESS "libminifi/test/TestExecuteProcess.cpp")
-    add_executable(testExecuteProcess ${LIBMINIFI_TEST_EXECUTE_PROCESS} ${SPD_SOURCES})
-    target_include_directories(testExecuteProcess PRIVATE BEFORE "thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")
-    target_include_directories(testExecuteProcess PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
-    target_include_directories(testExecuteProcess PRIVATE BEFORE "include")
-    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/")
-    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/core")
-    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/core/repository")
-    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/core/yaml")
-    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/io")
-    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/utils")
-    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/processors")
-    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/provenance")
-    if (CURL_FOUND)
-        target_include_directories(testExecuteProcess PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
-    	target_link_libraries(testExecuteProcess ${CURL_LIBRARIES})
-    endif(CURL_FOUND)
-    target_link_libraries(testExecuteProcess ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
-    add_test(NAME ExecuteProcess COMMAND testExecuteProcess)
-    
-    file(GLOB LIBMINIFI_TEST_SOCKETS "libminifi/test/SocketTests.cpp")
-    add_executable(testSockets ${LIBMINIFI_TEST_SOCKETS} ${SPD_SOURCES})
-    target_include_directories(testSockets PRIVATE BEFORE "thirdparty/catch")
-    target_include_directories(testSockets PRIVATE BEFORE "thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")
-    target_include_directories(testSockets PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
-    target_include_directories(testSockets PRIVATE BEFORE "include")
-    target_include_directories(testSockets PRIVATE BEFORE "libminifi/include/")
-    target_include_directories(testSockets PRIVATE BEFORE "libminifi/include/core")
-    target_include_directories(testSockets PRIVATE BEFORE "libminifi/include/core/repository")
-    target_include_directories(testSockets PRIVATE BEFORE "libminifi/include/io")
-    target_include_directories(testSockets PRIVATE BEFORE "libminifi/include/utils")
-    target_include_directories(testSockets PRIVATE BEFORE "libminifi/include/processors")
-    target_include_directories(testSockets PRIVATE BEFORE "libminifi/include/provenance")
-    if (CURL_FOUND)
-        target_include_directories(testSockets PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
-    	target_link_libraries(testSockets ${CURL_LIBRARIES})
-    endif(CURL_FOUND)
-    target_link_libraries(testSockets ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
-    add_test(NAME TestSockets COMMAND testSockets)
-    
-    file(GLOB LIBMINIFI_TEST_PROCESSORS "libminifi/test/ProcessorTests.cpp")
-    add_executable(testProcessors ${LIBMINIFI_TEST_PROCESSORS} ${SPD_SOURCES})
-    target_include_directories(testProcessors PRIVATE BEFORE "thirdparty/catch")
-    target_include_directories(testProcessors PRIVATE BEFORE "thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")
-    target_include_directories(testProcessors PRIVATE BEFORE "thirdparty/jsoncpp/include")
-    target_include_directories(testProcessors PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
-    target_include_directories(testProcessors PRIVATE BEFORE "include")
-    target_include_directories(testProcessors PRIVATE BEFORE "libminifi/include/")
-    target_include_directories(testProcessors PRIVATE BEFORE "libminifi/include/core")
-    target_include_directories(testProcessors PRIVATE BEFORE "libminifi/include/core/repository")
-    target_include_directories(testProcessors PRIVATE BEFORE "libminifi/include/io")
-    target_include_directories(testProcessors PRIVATE BEFORE "libminifi/include/utils")
-    target_include_directories(testProcessors PRIVATE BEFORE "libminifi/include/processors")
-    target_include_directories(testProcessors PRIVATE BEFORE "libminifi/include/core/reporting")
-    target_include_directories(testProcessors PRIVATE BEFORE "libminifi/include/provenance")
-    if (CURL_FOUND)
-        target_include_directories(testProcessors PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
-    	target_link_libraries(testProcessors ${CURL_LIBRARIES})
-    endif(CURL_FOUND)
-    target_link_libraries(testProcessors ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
-    add_test(NAME TestProcessors COMMAND testProcessors)
-    
+include(BuildDocs)
 
-# Create a custom build target called "docker" that will invoke DockerBuild.sh and create the NiFi-MiNiFi-CPP Docker image
-add_custom_target(
-    docker
-    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} minificppsource ${CMAKE_SOURCE_DIR}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
+include(DockerConfig)
 
-# Create a custom build target that will run the linter.
-add_custom_target(
-    linter
-    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh ${CMAKE_SOURCE_DIR}/libminifi/include/ ${CMAKE_SOURCE_DIR}/libminifi/src/ )
-
-
-FIND_PACKAGE(Doxygen)
-
-if(DOXYGEN_FOUND)
-if(EXISTS ${DOXYGEN_EXECUTABLE})
-
-MESSAGE("Creating API Documentation ${DOXYGEN_EXECUTABLE}")
-SET(DOXYGEN_INPUT "../docs/Doxyfile")
-SET(DOXYGEN_OUTPUT "../docs")
-
-ADD_CUSTOM_COMMAND(
-  OUTPUT ${DOXYGEN_OUTPUT}
-  COMMAND ${CMAKE_COMMAND} -E echo_append "Building LibMiNiFi API Documentation..."
-  COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_INPUT}
-  COMMAND ${CMAKE_COMMAND} -E echo "Done."
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS ${DOXYGEN_INPUT}
-  )
-
-ADD_CUSTOM_TARGET(docs ${DOXYGEN_EXECUTABLE} ${DOXYGEN_INPUT})
-else()
-ADD_CUSTOM_TARGET(docs echo "Doxygen binary does not exist. Cannot create documentation... Please install Doxygen or verify correct installation.")
-endif()
-else()
-ADD_CUSTOM_TARGET(docs echo "Doxygen does not exist. Please install it. Cannot create documentation...")
-endif(DOXYGEN_FOUND)
