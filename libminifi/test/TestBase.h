@@ -34,7 +34,7 @@
  * location set in the CMake add_test(...) command.                           *
  * Example usage in test cases:                                               *
  *    std::string testFile = resourcesPath + "/myTestResourceFile.yml";       */
-static const std::string resourcesPath = "resources";
+static const std::string RESOURCE_PATH = "resources";
 
 class LogTestController {
  public:

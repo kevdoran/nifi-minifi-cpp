@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
+
 
 #include <memory>
 #include <string>
@@ -31,10 +31,10 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   //configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared<minifi::io::StreamFactory>(configuration);
-  core::YamlConfiguration *yamlConfig = new core::YamlConfiguration(testProvRepo, testFlowFileRepo, streamFactory);
+  core::YamlConfiguration *yamlConfig = new core::YamlConfiguration(testProvRepo, testFlowFileRepo, streamFactory, configuration);
 
   SECTION("loading YAML without optional component IDs works") {
-    std::string testFile = resourcesPath + "/TestYAMLConfigV1_ComponentIdsNotSpecified.yml";
+    std::string testFile = RESOURCE_PATH + "/TestYAMLConfigV1_ComponentIdsNotSpecified.yml";
     std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig->getRoot(testFile);
 
     REQUIRE(rootFlowConfig);
@@ -63,9 +63,10 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
       REQUIRE(it->second->getSource());
     }
   }
-
   SECTION("missing required field in YAML throws exception") {
-    std::string testFile = resourcesPath + "/TestYAMLConfigV1_MissingRequiredField.yml";
+    std::string testFile = RESOURCE_PATH + "/TestYAMLConfigV1_MissingRequiredField.yml";
+    yamlConfig->getRoot(testFile);
     REQUIRE_THROWS_AS(yamlConfig->getRoot(testFile), std::invalid_argument);
   }
 }
+
