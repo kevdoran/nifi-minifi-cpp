@@ -46,12 +46,9 @@ int16_t TLSContext::initialize() {
     return error_value;
   }
   std::string clientAuthStr;
-  bool needClientCert = true;
-  if (!(configure_->get(Configure::nifi_security_need_ClientAuth,
-                           clientAuthStr)
-      && org::apache::nifi::minifi::utils::StringUtils::StringToBool(
-          clientAuthStr, needClientCert))) {
-    needClientCert = true;
+  bool needClientCert = false; // TODO, verify false is the correct default if it is not explicit in the properties file
+  if (configure_->get(Configure::nifi_security_need_ClientAuth, clientAuthStr)) {
+    org::apache::nifi::minifi::utils::StringUtils::StringToBool(clientAuthStr, needClientCert);
   }
 
   SSL_library_init();
@@ -91,8 +88,7 @@ int16_t TLSContext::initialize() {
       error_value = TLS_ERROR_CERT_MISSING;
       return error_value;
     }
-    if (configure_->get(Configure::nifi_security_client_pass_phrase,
-                           passphrase)) {
+    if (configure_->get(Configure::nifi_security_client_pass_phrase, passphrase)) {
       // if the private key has passphase
       SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
       SSL_CTX_set_default_passwd_cb_userdata(ctx, static_cast<void*>(configure_.get()));
@@ -117,7 +113,7 @@ int16_t TLSContext::initialize() {
     }
     // load CA certificates
     if (configure_->get(Configure::nifi_security_client_ca_certificate,
-                           caCertificate)) {
+                        caCertificate)) {
       retp = SSL_CTX_load_verify_locations(ctx, caCertificate.c_str(), 0);
       if (retp == 0) {
         logger_->log_error("Can not load CA certificate, Exiting, error : %s",
